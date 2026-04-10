@@ -1,0 +1,16 @@
+# Environment variables - never commit these
+.env
+
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+.venv/
+venv/
+
+# Uploaded telemetry files - can be large
+*.ld
+*.ldx
+
+# OS
+.DS_Store
