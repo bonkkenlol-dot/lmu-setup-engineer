@@ -294,6 +294,77 @@ def ride_height_summary(lap):
 
 
 # ---------------------------------------------------------------------------
+# Corner-specific camber analysis
+# ---------------------------------------------------------------------------
+
+def camber_analysis(lap, corners):
+    """
+    For each tyre, compute mean inner/outer temps specifically at corners
+    where that tyre is on the OUTSIDE (under peak lateral load).
+
+    Right-hand corners: FL and RL are the outside tyres.
+    Left-hand corners:  FR and RR are the outside tyres.
+
+    Straight-line braking sections are excluded — inner heating during braking
+    is normal and should not be interpreted as a camber problem.
+
+    Values are relative (each channel normalised 0–1 independently).
+    Comparing inner vs outer within the same window is directionally valid:
+    inner > outer during cornering → too much negative camber.
+    outer > inner during cornering → not enough negative camber.
+    """
+    speed_ch = lap.ch('Ground Speed')
+    dist_ch  = lap.ch('Lap Distance')
+    if speed_ch is None or dist_ch is None or not corners:
+        return {}
+
+    n    = len(speed_ch.data)
+    freq = speed_ch.freq
+    dist = _resample(dist_ch.data, n)
+
+    right_corners = [c for c in corners if c['direction'] == 'right']
+    left_corners  = [c for c in corners if c['direction'] == 'left']
+
+    def _mean_temp_at_corners(code, zone, corner_list):
+        ch = lap.ch(f'Tyre Rubber Temp {code} {zone}')
+        if ch is None or ch.is_flat or not corner_list:
+            return None
+        resampled = _resample(ch.data, n)
+        vals = []
+        for corner in corner_list:
+            apex_idx = int(np.argmin(np.abs(dist - corner['position_m'])))
+            # Window: start just after braking ends (~0.2s before apex) to ~0.8s after
+            pre  = int(freq * 0.2)
+            post = int(freq * 0.8)
+            s = max(0, apex_idx - pre)
+            e = min(n, apex_idx + post)
+            vals.append(float(np.mean(resampled[s:e])))
+        return round(float(np.mean(vals)), 3) if vals else None
+
+    result = {}
+
+    # FL, RL — outside tyre at right-hand corners
+    for code, corner_list, label in [
+        ('FL', right_corners, 'right'),
+        ('RL', right_corners, 'right'),
+        ('FR', left_corners,  'left'),
+        ('RR', left_corners,  'left'),
+    ]:
+        inner = _mean_temp_at_corners(code, 'I', corner_list)
+        outer = _mean_temp_at_corners(code, 'O', corner_list)
+        if inner is not None and outer is not None:
+            diff = round(inner - outer, 3)
+            result[code] = {
+                'measured_at': f'{label}-hand corners ({len(corner_list)} corners)',
+                'inner_rel': inner,
+                'outer_rel': outer,
+                'inner_minus_outer': diff,
+            }
+
+    return result
+
+
+# ---------------------------------------------------------------------------
 # Base summary
 # ---------------------------------------------------------------------------
 
@@ -343,6 +414,9 @@ def base_summary(lap):
 
     # --- Corners ---
     result['corners'] = detect_corners(lap)
+
+    # --- Corner-specific camber analysis ---
+    result['camber_analysis'] = camber_analysis(lap, result['corners'])
 
     # --- Tyres ---
     result['tyres'] = tyre_summary(lap)

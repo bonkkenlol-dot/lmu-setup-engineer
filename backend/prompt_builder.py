@@ -38,11 +38,21 @@ Your job is to analyse telemetry data from a driver's lap and give specific, act
 - Third spring / heave spring (LMP2, LMP3, Hypercar): controls heave (both wheels moving together). Stiffer = less pitch/squat, more consistent aero platform.
 
 ### Tyres
-- Camber: more negative camber = larger contact patch in corners, but more inner tyre wear.
-  In LMU, the inner tyre running hotter than the outer is NORMAL and DESIRABLE — straight-line
-  braking always loads the inner edge. Do not interpret inner > outer temperature as a sign of
-  too much camber. Only flag camber as an issue if the outer is consistently hotter than the
-  inner, which indicates not enough negative camber and a loss of contact patch in cornering.
+- Camber: The telemetry includes a CAMBER ANALYSIS section with inner/outer tyre temps
+  measured specifically at corners where each tyre is on the OUTSIDE (peak lateral load).
+  Braking zones are excluded from this window, so the data reflects cornering load only.
+  Use this — not the lap-average tyre data — to diagnose camber issues.
+
+  How to interpret it:
+  - inner_minus_outer > 0.05 at outside-tyre corners → inner edge working harder than outer
+    during cornering → too much negative camber → suggest reducing camber on that axle
+  - inner_minus_outer < -0.05 → outer edge working harder → not enough negative camber
+    → suggest increasing camber
+  - Values between -0.05 and +0.05 → reasonably balanced, camber is not the priority
+
+  Important: in straight-line braking, inner always heats more regardless of camber.
+  The CAMBER ANALYSIS section isolates cornering only, so that effect is filtered out.
+
 - Toe: front toe-in = stability, more understeer. Front toe-out = sharper turn-in, more oversteer risk.
   Rear toe-in = stability. Rear toe-out = agility (rarely used).
 - Tyre pressures: NEVER suggest adjusting tyre pressures. In LMU, minimum tyre pressure is always optimal and is already standard in all competitive setups.
@@ -147,10 +157,15 @@ def build_user_prompt(analysis, driver_description, ld_file_meta):
     if rh:
         parts.append(_section('RIDE HEIGHTS (relative)', _format_ride_heights(rh)))
 
-    # --- Camber ---
+    # --- Camber (live degrees) ---
     camber = analysis.get('camber', {})
     if camber:
-        parts.append(_section('CAMBER (degrees)', _format_camber(camber)))
+        parts.append(_section('CAMBER (degrees, live channel)', _format_camber(camber)))
+
+    # --- Corner-specific camber analysis ---
+    camber_analysis = analysis.get('camber_analysis', {})
+    if camber_analysis:
+        parts.append(_section('CAMBER ANALYSIS (inner vs outer at cornering load)', _format_camber_analysis(camber_analysis)))
 
     # --- Targeted extra data ---
     extra = targeted.get('data', {})
@@ -298,6 +313,31 @@ def _format_ride_heights(rh):
                 f"  {code}: mean={r['mean_rel']:.3f}  std={r['std_rel']:.3f}"
             )
     return '\n'.join(lines) if lines else 'No ride height data.'
+
+
+def _format_camber_analysis(data):
+    lines = [
+        'Inner/outer temps sampled at apex + exit of corners where each tyre is on the outside.',
+        'Braking phase excluded. Values are relative (0–1 per channel, comparable within each row).',
+        '',
+    ]
+    for code in ['FL', 'FR', 'RL', 'RR']:
+        d = data.get(code)
+        if not d:
+            continue
+        diff = d['inner_minus_outer']
+        if diff > 0.05:
+            flag = '⚠ inner heating more — possible too much negative camber'
+        elif diff < -0.05:
+            flag = '⚠ outer heating more — possible not enough negative camber'
+        else:
+            flag = '✓ balanced'
+        lines.append(
+            f"  {code} ({d['measured_at']}): "
+            f"inner={d['inner_rel']:.3f}  outer={d['outer_rel']:.3f}  "
+            f"diff={diff:+.3f}  {flag}"
+        )
+    return '\n'.join(lines)
 
 
 def _format_camber(camber):

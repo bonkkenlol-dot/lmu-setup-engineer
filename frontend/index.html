@@ -680,28 +680,54 @@
 
     /* ─── Description tips ──────────────────────────────────────────── */
     .description-tips {
+      margin-top: 14px;
+      border: 1px solid var(--border-hi);
+      border-left: 3px solid var(--blue);
+      border-radius: var(--radius);
+      overflow: hidden;
+    }
+
+    .tips-header {
       display: flex;
-      flex-wrap: wrap;
       align-items: center;
-      gap: 6px;
-      margin-top: 10px;
-    }
-
-    .tips-label {
-      font-size: 10px;
-      letter-spacing: 0.1em;
-      text-transform: uppercase;
-      color: var(--dim);
-      margin-right: 2px;
-    }
-
-    .tip {
-      font-size: 11px;
-      color: var(--muted);
+      gap: 8px;
+      padding: 10px 14px;
       background: var(--bg-4);
-      border: 1px solid var(--border);
-      border-radius: 3px;
-      padding: 3px 8px;
+      font-size: 12px;
+      font-weight: 600;
+      font-family: var(--font-head);
+      letter-spacing: 0.04em;
+      color: var(--white);
+    }
+
+    .tips-body {
+      padding: 12px 14px;
+      font-size: 12px;
+      line-height: 1.65;
+      color: var(--muted);
+    }
+
+    .tips-list {
+      margin-top: 8px;
+      padding-left: 0;
+      list-style: none;
+    }
+
+    .tips-list li {
+      padding: 3px 0 3px 16px;
+      position: relative;
+      color: var(--muted);
+    }
+
+    .tips-list li::before {
+      content: '›';
+      position: absolute;
+      left: 2px;
+      color: var(--blue);
+    }
+
+    .tips-list li strong {
+      color: var(--white);
     }
 
     /* ─── Responsive ─────────────────────────────────────────────── */
@@ -805,11 +831,19 @@
         ></textarea>
         <div class="char-count" id="charCount">0 / 1000</div>
         <div class="description-tips">
-          <span class="tips-label">Tips for better results:</span>
-          <span class="tip">Corner speed — low / medium / high</span>
-          <span class="tip">Phase — entry / apex / exit</span>
-          <span class="tip">Type — understeer / oversteer / instability / bouncing</span>
-          <span class="tip">Where — specific corners if known</span>
+          <div class="tips-header">
+            <svg width="13" height="13" viewBox="0 0 16 16" fill="var(--blue)"><path d="M8 1a7 7 0 1 0 0 14A7 7 0 0 0 8 1zm0 3a.75.75 0 1 1 0 1.5A.75.75 0 0 1 8 4zm.75 3.75v4.5h-1.5v-4.5h1.5z"/></svg>
+            More detail = significantly better advice
+          </div>
+          <div class="tips-body">
+            The AI uses your description to decide what to look for in the telemetry. Vague descriptions produce generic advice. Specific descriptions produce targeted, actionable recommendations. Try to include:
+            <ul class="tips-list">
+              <li><strong>Corner speed</strong> — low / medium / high speed</li>
+              <li><strong>Phase</strong> — entry / apex / exit</li>
+              <li><strong>Problem type</strong> — understeer / oversteer / snap / instability over bumps</li>
+              <li><strong>Where on track</strong> — specific corner names or numbers if you know them</li>
+            </ul>
+          </div>
         </div>
 
         <div class="error-banner" id="errorBanner"></div>
