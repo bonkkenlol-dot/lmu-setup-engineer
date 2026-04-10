@@ -24,10 +24,7 @@ def _get_client():
         api_key = os.environ.get('GEMINI_API_KEY')
         if not api_key:
             raise RuntimeError('GEMINI_API_KEY environment variable is not set.')
-        _client = genai.Client(
-            api_key=api_key,
-            http_options=types.HttpOptions(api_version='v1'),
-        )
+        _client = genai.Client(api_key=api_key)
     return _client
 
 
@@ -35,7 +32,7 @@ def _get_client():
 # Public API
 # ---------------------------------------------------------------------------
 
-MODEL = 'gemini-1.5-flash'
+MODEL = 'gemini-2.5-flash'
 
 
 def get_setup_advice(user_prompt: str) -> str:
