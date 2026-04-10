@@ -258,10 +258,8 @@ def suspension_summary(lap):
         d = ch.data
         hist = _damper_histogram(d, ch.freq)
         result[code] = {
-            'mean_rel':  round(float(np.mean(d)), 3),
-            'min_rel':   round(float(np.min(d)), 3),
-            'max_rel':   round(float(np.max(d)), 3),
-            'range_rel': round(float(np.max(d) - np.min(d)), 3),
+            'mean_rel': round(float(np.mean(d)), 3),
+            'std_rel':  round(float(np.std(d)), 3),
             'damper_histogram': hist,
         }
 
@@ -271,8 +269,8 @@ def suspension_summary(lap):
         if ch and not ch.is_flat:
             d = ch.data
             result[label] = {
-                'mean_rel':  round(float(np.mean(d)), 3),
-                'range_rel': round(float(np.max(d) - np.min(d)), 3),
+                'mean_rel': round(float(np.mean(d)), 3),
+                'std_rel':  round(float(np.std(d)), 3),
                 'damper_histogram': _damper_histogram(d, ch.freq),
             }
 
@@ -280,16 +278,17 @@ def suspension_summary(lap):
 
 
 def ride_height_summary(lap):
-    """Return ride height stats per corner."""
+    """Return ride height stats per corner.
+    Only mean is reported — min/max are always 0.0/1.0 due to normalisation
+    and would mislead the AI into diagnosing bottoming out.
+    """
     result = {}
     for code in ['FL', 'FR', 'RL', 'RR']:
         ch = lap.ch(f'Ride Height {code}')
         if ch and not ch.is_flat:
-            d = ch.data
             result[code] = {
-                'mean_rel': round(float(np.mean(d)), 3),
-                'min_rel':  round(float(np.min(d)), 3),
-                'max_rel':  round(float(np.max(d)), 3),
+                'mean_rel': round(float(np.mean(ch.data)), 3),
+                'std_rel':  round(float(np.std(ch.data)), 3),
             }
     return result
 

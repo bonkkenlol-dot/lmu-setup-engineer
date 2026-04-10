@@ -57,7 +57,7 @@ def get_setup_advice(user_prompt: str) -> str:
             config=types.GenerateContentConfig(
                 system_instruction=SYSTEM_PROMPT,
                 temperature=0.4,
-                max_output_tokens=2048,
+                max_output_tokens=8192,
             ),
         )
 

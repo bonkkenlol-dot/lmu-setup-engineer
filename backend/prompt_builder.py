@@ -258,7 +258,7 @@ def _format_suspension(susp):
             continue
         label = code if len(code) == 2 else code.replace('_', ' ').title()
         lines.append(f"\n  {label}:")
-        lines.append(f"    Position (rel): mean={s['mean_rel']:.3f}  range={s['range_rel']:.3f}")
+        lines.append(f"    Position (rel): mean={s['mean_rel']:.3f}  std={s['std_rel']:.3f}")
 
         hist = s.get('damper_histogram')
         if hist:
@@ -284,7 +284,7 @@ def _format_ride_heights(rh):
         r = rh.get(code)
         if r:
             lines.append(
-                f"  {code}: mean={r['mean_rel']:.3f}  min={r['min_rel']:.3f}  max={r['max_rel']:.3f}"
+                f"  {code}: mean={r['mean_rel']:.3f}  std={r['std_rel']:.3f}"
             )
     return '\n'.join(lines) if lines else 'No ride height data.'
 
