@@ -32,7 +32,7 @@ def _get_client():
 # Public API
 # ---------------------------------------------------------------------------
 
-MODEL = 'gemini-pro-latest'
+MODEL = 'gemini-2.0-flash'
 
 
 def get_setup_advice(user_prompt: str) -> str:
